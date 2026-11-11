@@ -27,6 +27,8 @@ spec:
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           securityContext:
             {{- toYaml $.Values.securityContext | nindent 12 }}
+          envFrom:
+            - secretRef: { name: {{ $.Values.existingSecret }} }
           env:
             {{- range $k, $v := $.Values.env }}
             - name: {{ $k }}

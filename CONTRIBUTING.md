@@ -7,6 +7,7 @@ Requirements: [uv](https://docs.astral.sh/uv/), Node 22 + pnpm, Docker.
 ```bash
 make setup      # backend + frontend dependencies, git hooks
 make infra-up   # Postgres, MySQL, Temporal
+make db-upgrade # apply metadata-DB migrations
 make api        # http://localhost:8000/api/v1/docs
 make web        # http://localhost:5173
 ```
@@ -16,6 +17,10 @@ make web        # http://localhost:5173
 - Branch from `main` (`feature/<short-name>`), open a draft PR early.
 - `make ci` must pass locally before requesting review.
 - Architecture changes need an ADR in `docs/adr/` (copy the latest one).
+- Changed an ORM model? `make db-revision m="describe change"`, review the generated
+  migration, commit it. CI runs `alembic check` to catch forgotten migrations.
+- Changed an API schema? `make api-types` and commit `frontend/packages/api-client`.
+- `make test-integration` runs tests against a real PostgreSQL (`TEST_PG_URL=...`).
 
 ## Where code goes
 
