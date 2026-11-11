@@ -1,0 +1,4 @@
+@import "@driftless/ui/styles.css";
+
+/* Let Tailwind see class names used in the app's own source. */
+@source "./";
