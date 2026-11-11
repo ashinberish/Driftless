@@ -1,0 +1,45 @@
+# Each entry under `components` becomes a Deployment (+ Service if `port` is set),
+# rendered by the single generic template in templates/components.yaml.
+image:
+  registry: ghcr.io/ashinberish
+  tag: ""          # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+env:
+  DRIFTLESS_ENVIRONMENT: production
+  DRIFTLESS_LOG_JSON: "true"
+  DRIFTLESS_TEMPORAL_ADDRESS: temporal-frontend:7233
+
+components:
+  api:
+    image: driftless-api
+    replicas: 2
+    port: 8000
+    probes: { liveness: /healthz, readiness: /readyz }
+    resources:
+      requests: { cpu: 250m, memory: 256Mi }
+      limits: { memory: 512Mi }
+  worker:
+    image: driftless-worker
+    replicas: 2
+    resources:
+      requests: { cpu: 500m, memory: 512Mi }
+      limits: { memory: 2Gi }
+  web:
+    image: driftless-web
+    replicas: 2
+    port: 8080
+    probes: { liveness: /, readiness: / }
+    resources:
+      requests: { cpu: 50m, memory: 64Mi }
+      limits: { memory: 128Mi }
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  seccompProfile: { type: RuntimeDefault }
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: ["ALL"] }
