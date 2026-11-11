@@ -6,6 +6,8 @@ Requirements: [uv](https://docs.astral.sh/uv/), Node 22 + pnpm, Docker.
 
 ```bash
 make setup      # backend + frontend dependencies, git hooks
+make dev        # infra in Docker + api/worker/web with hot reload → http://localhost:5173
+# or run pieces yourself:
 make infra-up   # Postgres, MySQL, Temporal
 make db-upgrade # apply metadata-DB migrations
 make api        # http://localhost:8000/api/v1/docs

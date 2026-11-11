@@ -7,6 +7,7 @@ locally. The API itself never migrates on startup (multiple replicas would race)
 from __future__ import annotations
 
 import argparse
+import logging
 
 from alembic import command
 from alembic.config import Config
@@ -36,6 +37,8 @@ def main(argv: list[str] | None = None) -> None:
     rev.add_argument("-m", "--message", required=True)
     args = parser.parse_args(argv)
 
+    # Alembic logs through stdlib logging; show progress in container logs.
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     url = get_settings().database_url
     if not url:
         parser.error("DRIFTLESS_DATABASE_URL is not set")

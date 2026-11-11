@@ -32,13 +32,31 @@ See [docs/architecture.md](docs/architecture.md) for the layering rules.
 
 ## Quick start
 
+Run everything in containers (needs only Docker):
+
 ```bash
-make setup       # install dependencies
-make infra-up    # Postgres, MySQL, Temporal (docker compose)
-make api         # API at http://localhost:8000/api/v1/docs
-make web         # web app at http://localhost:5173
-make ci          # lint, type-check, test, build
+make up          # web http://localhost:8080 · API docs http://localhost:8000/api/v1/docs
+make logs        # follow app logs
+make down        # stop (data is kept)
 ```
+
+Develop with hot reload (needs Docker, uv and pnpm):
+
+```bash
+make dev         # databases in Docker; api, worker and web from source → http://localhost:5173
+```
+
+A seeded sample database is included. In the app, add a connection to host
+`pg-source` (with `make up`) or `localhost`, port `5433` (with `make dev`), database
+`shop`, user `source`, password reference `env:SAMPLE_SOURCE_PW` — then create a
+migration and see the Check screen.
+
+| Command | Starts |
+|---|---|
+| `make up` | Databases, Temporal, migrations, API, worker, web — all in containers |
+| `make dev` | Databases + Temporal in Docker; API, worker, web from source with reload |
+| `make infra-up` | Databases + Temporal only |
+| `make ci` | Lint, type-check, test, build |
 
 Try the engine without any database:
 

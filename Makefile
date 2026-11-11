@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 COMPOSE := docker compose -f deploy/docker-compose.yml
 
-.PHONY: help setup infra-up infra-down stack-up db-upgrade db-revision api-types api worker web test test-integration lint typecheck fmt build ci
+.PHONY: help setup up down logs dev infra-up infra-down stack-up db-upgrade db-revision api-types api worker web test test-integration lint typecheck fmt build ci
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -11,14 +11,31 @@ setup: ## Install all dependencies (uv + pnpm) and git hooks
 	cd frontend && pnpm install
 	-pre-commit install
 
-infra-up: ## Start databases + Temporal for local development
-	$(COMPOSE) up -d
+up: ## Build and start EVERYTHING in containers (web: http://localhost:8080)
+	$(COMPOSE) --profile app up -d --build
+	@echo ""
+	@echo "  Web app      http://localhost:8080"
+	@echo "  API docs     http://localhost:8000/api/v1/docs"
+	@echo "  Temporal UI  http://localhost:8233"
+	@echo "  Logs: make logs    Stop: make down"
 
-infra-down: ## Stop local infrastructure
+down: ## Stop all containers (data volumes are kept)
+	$(COMPOSE) --profile app down
+
+logs: ## Follow logs of the app containers
+	$(COMPOSE) --profile app logs -f migrate api worker web
+
+dev: ## Databases in Docker + api/worker/web from source with hot reload (web: :5173)
+	./scripts/dev.sh
+
+infra-up: ## Start only databases + Temporal (run the apps yourself, or use `make dev`)
+	$(COMPOSE) up -d
+	@echo "Infrastructure only. Start the apps with 'make dev', or everything in containers with 'make up'."
+
+infra-down: ## Stop infrastructure containers
 	$(COMPOSE) down
 
-stack-up: ## Run the whole stack in containers
-	$(COMPOSE) --profile app up -d --build
+stack-up: up ## Alias for `make up`
 
 DB_URL ?= postgresql://driftless:driftless@localhost:5432/driftless
 TEST_PG_URL ?= postgresql://driftless:driftless@localhost:5432/postgres

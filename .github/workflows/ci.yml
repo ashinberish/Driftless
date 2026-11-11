@@ -132,6 +132,42 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
+  compose-smoke:
+    name: Full stack (make up)
+    runs-on: ubuntu-latest
+    needs: [images]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start everything
+        run: make up
+      - name: Wait for the web app and API (through nginx)
+        run: |
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:8080/ >/dev/null && \
+            curl -sf http://localhost:8080/api/v1/connectors | grep -q postgres && exit 0
+            sleep 2
+          done
+          echo "::error::stack did not become healthy"; exit 1
+      - name: Assess the seeded sample database end to end
+        run: |
+          set -e
+          API=http://localhost:8080/api/v1
+          conn=$(curl -sf -X POST $API/connections -H 'content-type: application/json' \
+            -d '{"name":"shop","engine":"postgres","host":"pg-source","port":5432,"database":"shop","username":"source","secret_ref":"env:SAMPLE_SOURCE_PW","ssl_mode":"disable"}' \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          mig=$(curl -sf -X POST $API/migrations -H 'content-type: application/json' \
+            -d "{\"name\":\"smoke\",\"source_connection_id\":\"$conn\",\"target_engine\":\"postgres\"}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          curl -sf -X POST $API/migrations/$mig/assessments | python3 -c \
+            'import json,sys; a=json.load(sys.stdin)["assessment"]; assert a["tables"]==4, a; print("tables:", a["tables"], "ready:", a["ready"])'
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker compose -f deploy/docker-compose.yml --profile app ps
+          docker compose -f deploy/docker-compose.yml --profile app logs --no-color
+      - if: always()
+        run: make down
+
   helm:
     name: Helm chart
     runs-on: ubuntu-latest

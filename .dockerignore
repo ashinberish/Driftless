@@ -1,0 +1,15 @@
+# Keep build contexts small and reproducible: never ship local environments.
+**/.git
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/node_modules
+**/dist
+**/coverage
+**/.vite
+.env
+.env.*
+docs
+deploy/helm

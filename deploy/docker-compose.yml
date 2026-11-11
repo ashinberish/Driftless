@@ -1,9 +1,12 @@
-# Local development stack.
+# Local stack.
 #
-#   make infra-up        # databases + Temporal only (run api/worker/web from source)
-#   make stack-up        # everything in containers (profile "app")
+#   make up        # everything in containers  -> http://localhost:8080
+#   make dev       # databases + Temporal here; api/worker/web from source with reload
+#   make infra-up  # databases + Temporal only
 #
-# Sample source databases (pg-source, mysql-source) let you try migrations locally.
+# A seeded sample source database (pg-source, "shop") lets you try a migration right
+# away: add a connection with host "pg-source" (from containers) or "localhost:5433"
+# (from `make dev`), database "shop", user "source", password ref "env:SAMPLE_SOURCE_PW".
 name: driftless
 
 x-backend-env: &backend-env
@@ -11,8 +14,10 @@ x-backend-env: &backend-env
   DRIFTLESS_LOG_LEVEL: INFO
   DRIFTLESS_TEMPORAL_ADDRESS: temporal:7233
   DRIFTLESS_DATABASE_URL: postgresql://driftless:driftless@metadata-db:5432/driftless
+  SAMPLE_SOURCE_PW: source  # local demo only; real deployments use vault: refs
 
 services:
+  # ------------------------------------------------------------------ infrastructure
   metadata-db:
     image: postgres:17
     environment:
@@ -22,9 +27,9 @@ services:
     ports: ["5432:5432"]
     volumes: [metadata-data:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U driftless"]
-      interval: 5s
-      retries: 10
+      test: ["CMD-SHELL", "pg_isready -U driftless -d driftless"]
+      interval: 3s
+      retries: 20
 
   pg-source:
     image: postgres:17
@@ -34,6 +39,12 @@ services:
       POSTGRES_PASSWORD: source  # local only
       POSTGRES_DB: shop
     ports: ["5433:5432"]
+    volumes:
+      - ./seed/pg-source:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U source -d shop"]
+      interval: 3s
+      retries: 20
 
   mysql-source:
     image: mysql:8.4
@@ -44,28 +55,16 @@ services:
     ports: ["3306:3306"]
 
   temporal:
-    image: temporalio/auto-setup:latest
-    depends_on:
-      metadata-db: { condition: service_healthy }
-    environment:
-      DB: postgres12
-      DB_PORT: 5432
-      POSTGRES_USER: driftless
-      POSTGRES_PWD: driftless
-      POSTGRES_SEEDS: metadata-db
-    ports: ["7233:7233"]
+    # Temporal's all-in-one dev server (state in memory). Web UI: http://localhost:8233
+    image: temporalio/temporal:latest
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--ui-ip", "0.0.0.0"]
+    ports: ["7233:7233", "8233:8233"]
 
-  temporal-ui:
-    image: temporalio/ui:latest
-    depends_on: [temporal]
-    environment:
-      TEMPORAL_ADDRESS: temporal:7233
-    ports: ["8233:8080"]
-
-  # ---------------------------------------------------------------- app (profile)
+  # -------------------------------------------------------- application (profile "app")
   migrate:
     profiles: ["app"]
     build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: api } }
+    image: driftless-api:local
     environment: *backend-env
     entrypoint: ["driftless-api-migrate", "upgrade"]
     depends_on:
@@ -73,23 +72,33 @@ services:
 
   api:
     profiles: ["app"]
+    # Same image as `migrate`; the build section lets `up --build` work in any order.
     build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: api } }
+    image: driftless-api:local
     environment: *backend-env
     ports: ["8000:8000"]
     depends_on:
       migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz')"]
+      interval: 5s
+      retries: 20
 
   worker:
     profiles: ["app"]
     build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: worker } }
+    image: driftless-worker:local
     environment: *backend-env
     depends_on: [temporal]
+    restart: on-failure  # Temporal may take a few seconds to accept connections
 
   web:
     profiles: ["app"]
     build: { context: .., dockerfile: deploy/docker/web.Dockerfile }
-    depends_on: [api]
+    image: driftless-web:local
     ports: ["8080:8080"]
+    depends_on:
+      api: { condition: service_healthy }
 
 volumes:
   metadata-data:
