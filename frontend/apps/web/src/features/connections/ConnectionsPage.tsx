@@ -9,6 +9,7 @@ import {
   type Column,
 } from "@driftless/ui";
 import { Lock, Plus, Server, TriangleAlert } from "lucide-react";
+import { useNavigate } from "react-router";
 
 import { useConnections } from "./api";
 
@@ -30,6 +31,7 @@ const columns: Column<Connection>[] = [
 
 export function ConnectionsPage() {
   const { data, isPending, isError, error } = useConnections();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -37,7 +39,7 @@ export function ConnectionsPage() {
         title="Connections"
         description="Databases Driftless can reach. Credentials stay in your secrets backend."
         actions={
-          <Button variant="primary">
+          <Button variant="primary" onClick={() => navigate("/connections/new")}>
             <Plus /> New connection
           </Button>
         }
@@ -57,13 +59,18 @@ export function ConnectionsPage() {
             title="No connections yet"
             description="Add a source and a target database to start your first migration."
             action={
-              <Button variant="primary">
+              <Button variant="primary" onClick={() => navigate("/connections/new")}>
                 <Plus /> New connection
               </Button>
             }
           />
         ) : (
-          <DataTable columns={columns} rows={data.items} rowKey={(c) => c.id} />
+          <DataTable
+            columns={columns}
+            rows={data.items}
+            rowKey={(c) => c.id}
+            onRowClick={(c) => navigate(`/connections/${c.id}`)}
+          />
         )}
       </Card>
     </>

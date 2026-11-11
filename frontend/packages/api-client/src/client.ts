@@ -1,7 +1,10 @@
 import type {
   ApiErrorBody,
+  CatalogSummary,
   Connection,
   ConnectionCreate,
+  ConnectionSpec,
+  ConnectionTestResult,
   ConnectorInfo,
   Page,
 } from "./types";
@@ -61,6 +64,25 @@ export function createApiClient({ baseUrl = "/api/v1", fetch: fetchImpl = fetch,
         request<Connection>("/connections", { method: "POST", body: JSON.stringify(body) }),
       remove: (id: string) =>
         request<void>(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      /** Pre-flight checks for settings that are not saved yet. */
+      testSpec: (body: ConnectionSpec) =>
+        request<ConnectionTestResult>("/connections/test", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      test: (id: string) =>
+        request<ConnectionTestResult>(`/connections/${encodeURIComponent(id)}/test`, {
+          method: "POST",
+        }),
+      discover: (id: string, schemas?: string[]) => {
+        const query = schemas?.length
+          ? "?" + new URLSearchParams(schemas.map((s) => ["schemas", s])).toString()
+          : "";
+        return request<CatalogSummary>(
+          `/connections/${encodeURIComponent(id)}/discover${query}`,
+          { method: "POST" },
+        );
+      },
     },
   };
 }

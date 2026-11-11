@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider, type RouteObject } from "react-router";
 
+import { ConnectionDetailPage } from "@/features/connections/ConnectionDetailPage";
 import { ConnectionsPage } from "@/features/connections/ConnectionsPage";
+import { NewConnectionPage } from "@/features/connections/NewConnectionPage";
 import { MigrationsPage } from "@/features/migrations/MigrationsPage";
 import { OverviewPage } from "@/features/overview/OverviewPage";
 import { ComingSoonPage } from "@/shared/ComingSoonPage";
@@ -31,6 +33,22 @@ export const routes: RouteObject[] = [
         path: "connections",
         element: <ConnectionsPage />,
         handle: { nav: "connections", crumbs: ["Infrastructure", "Connections"] } satisfies RouteHandle,
+      },
+      {
+        path: "connections/new",
+        element: <NewConnectionPage />,
+        handle: {
+          nav: "connections",
+          crumbs: ["Infrastructure", "Connections", "New"],
+        } satisfies RouteHandle,
+      },
+      {
+        path: "connections/:connectionId",
+        element: <ConnectionDetailPage />,
+        handle: {
+          nav: "connections",
+          crumbs: ["Infrastructure", "Connections", "Details"],
+        } satisfies RouteHandle,
       },
       comingSoon("approvals", "approvals", ["Data Platform", "Approvals"], "S10"),
       comingSoon("runs", "runs", ["Data Platform", "Live runs"], "S4"),
