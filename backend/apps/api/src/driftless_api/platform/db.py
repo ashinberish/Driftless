@@ -7,8 +7,9 @@ never customer row data.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import DateTime, MetaData, TypeDecorator
+from sqlalchemy import DateTime, MetaData, TypeDecorator, event
 from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -49,6 +50,12 @@ class UtcDateTime(TypeDecorator[datetime]):
         return value
 
 
+def _enable_sqlite_fks(dbapi_connection: Any, _record: Any) -> None:
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 def to_async_url(url: str) -> str:
     """Accept plain ``postgresql://`` URLs and select the async psycopg driver."""
     if url.startswith("postgresql://") or url.startswith("postgres://"):
@@ -61,6 +68,9 @@ class Database:
         self.engine: AsyncEngine = create_async_engine(
             to_async_url(url), echo=echo, pool_pre_ping=True
         )
+        if self.engine.dialect.name == "sqlite":
+            # SQLite ignores foreign keys unless asked; keep behaviour identical to Postgres.
+            event.listen(self.engine.sync_engine, "connect", _enable_sqlite_fks)
         self.sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(
             self.engine, expire_on_commit=False
         )

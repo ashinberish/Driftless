@@ -11,12 +11,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from driftless_api import __version__
-from driftless_api.modules import connections, connectors, health
+from driftless_api.modules import connections, connectors, health, migrations
 from driftless_api.modules.connections.repository import (
     InMemoryConnectionRepository,
     SqlConnectionRepository,
 )
 from driftless_api.modules.connections.service import ConnectorFactory
+from driftless_api.modules.migrations.repository import (
+    InMemoryMigrationRepository,
+    SqlMigrationRepository,
+)
 from driftless_api.platform import (
     REQUEST_ID_HEADER,
     RequestContextMiddleware,
@@ -52,11 +56,13 @@ def create_app(
         if settings.database_url:
             database = Database(settings.database_url)
             app.state.connection_repository = SqlConnectionRepository(database.sessions)
+            app.state.migration_repository = SqlMigrationRepository(database.sessions)
         elif settings.is_production:
             raise ConfigurationError("DRIFTLESS_DATABASE_URL is required in production")
         else:
             log.warning("api.in_memory_store", hint="set DRIFTLESS_DATABASE_URL to persist data")
             app.state.connection_repository = InMemoryConnectionRepository()
+            app.state.migration_repository = InMemoryMigrationRepository()
         app.state.database = database
         try:
             yield
@@ -82,7 +88,7 @@ def create_app(
     install_error_handlers(app)
 
     app.include_router(health.router)
-    for module in (connectors, connections):
+    for module in (connectors, connections, migrations):
         app.include_router(module.router, prefix=settings.api_prefix)
     return app
 

@@ -11,7 +11,8 @@ async def test_checks_report_reachability_access_and_cdc(pg_config: ConnectionCo
     checks = {c.name: c for c in await PostgresConnector(pg_config).check()}
     assert checks["Reachable"].status is CheckStatus.OK
     assert checks["Reachable"].detail is not None
-    assert checks["Reachable"].detail.startswith("PostgreSQL")
+    assert checks["Reachable"].detail.startswith("PostgreSQL ")
+    assert "(" not in checks["Reachable"].detail
     assert checks["Read access"].detail == "3 tables visible"
     # Local test clusters may or may not run with wal_level=logical.
     assert checks["Change tracking"].status in {CheckStatus.OK, CheckStatus.WARNING}

@@ -3,7 +3,9 @@ import { createBrowserRouter, RouterProvider, type RouteObject } from "react-rou
 import { ConnectionDetailPage } from "@/features/connections/ConnectionDetailPage";
 import { ConnectionsPage } from "@/features/connections/ConnectionsPage";
 import { NewConnectionPage } from "@/features/connections/NewConnectionPage";
+import { MigrationCheckPage } from "@/features/migrations/MigrationCheckPage";
 import { MigrationsPage } from "@/features/migrations/MigrationsPage";
+import { NewMigrationPage } from "@/features/migrations/NewMigrationPage";
 import { OverviewPage } from "@/features/overview/OverviewPage";
 import { ComingSoonPage } from "@/shared/ComingSoonPage";
 
@@ -28,6 +30,16 @@ export const routes: RouteObject[] = [
         path: "migrations",
         element: <MigrationsPage />,
         handle: { nav: "migrations", crumbs: ["Data Platform", "Migrations"] } satisfies RouteHandle,
+      },
+      {
+        path: "migrations/new",
+        element: <NewMigrationPage />,
+        handle: { nav: "migrations", crumbs: ["Migrations", "New migration"] } satisfies RouteHandle,
+      },
+      {
+        path: "migrations/:migrationId/check",
+        element: <MigrationCheckPage />,
+        handle: { nav: "migrations", crumbs: ["Migrations", "Check"] } satisfies RouteHandle,
       },
       {
         path: "connections",

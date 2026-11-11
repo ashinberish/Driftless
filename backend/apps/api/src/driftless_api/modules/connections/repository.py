@@ -81,12 +81,15 @@ class SqlConnectionRepository:
 
     async def delete(self, connection_id: str) -> bool:
         async with self._sessions.begin() as session:
-            result = cast(
-                "CursorResult[Any]",
-                await session.execute(
-                    delete(ConnectionRecord).where(ConnectionRecord.id == connection_id)
-                ),
-            )
+            try:
+                result = cast(
+                    "CursorResult[Any]",
+                    await session.execute(
+                        delete(ConnectionRecord).where(ConnectionRecord.id == connection_id)
+                    ),
+                )
+            except IntegrityError as exc:  # still referenced (FK RESTRICT)
+                raise ConflictError("connection is still in use") from exc
             return result.rowcount > 0
 
     async def exists_with_name(self, name: str) -> bool:

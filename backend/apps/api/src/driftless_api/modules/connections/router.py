@@ -21,7 +21,12 @@ router = APIRouter(prefix="/connections", tags=["connections"])
 def get_service(request: Request) -> ConnectionService:
     state = request.app.state
     repository: ConnectionRepository = state.connection_repository
-    return ConnectionService(repository, state.secrets, state.connector_factory)
+    return ConnectionService(
+        repository,
+        state.secrets,
+        state.connector_factory,
+        in_use=state.migration_repository.uses_connection,
+    )
 
 
 Service = Annotated[ConnectionService, Depends(get_service)]

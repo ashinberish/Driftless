@@ -54,3 +54,12 @@ describe("CheckList", () => {
     expect(screen.getByRole("button", { name: /Copy fix/ })).toBeInTheDocument();
   });
 });
+
+describe("ProgressRing", () => {
+  it("reports clamped progress accessibly and shows the percentage", async () => {
+    const { ProgressRing } = await import("../index");
+    render(<ProgressRing value={87.4} label="Readiness" />);
+    expect(screen.getByRole("progressbar", { name: "Readiness" })).toHaveAttribute("aria-valuenow", "87");
+    expect(screen.getByText("87%")).toBeInTheDocument();
+  });
+});

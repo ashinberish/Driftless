@@ -108,6 +108,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/migrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List migrations (newest first) */
+        get: operations["list_migrations_api_v1_migrations_get"];
+        put?: never;
+        /** Create a draft */
+        post: operations["create_migration_api_v1_migrations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/migrations/{migration_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a migration */
+        get: operations["get_migration_api_v1_migrations__migration_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/migrations/{migration_id}/assessments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assess the source database against the target engine */
+        post: operations["run_assessment_api_v1_migrations__migration_id__assessments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/migrations/{migration_id}/assessments/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Most recent assessment */
+        get: operations["latest_assessment_api_v1_migrations__migration_id__assessments_latest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/migrations/{migration_id}/assessments/latest/report.md": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download the latest assessment as a Markdown report */
+        get: operations["assessment_report_api_v1_migrations__migration_id__assessments_latest_report_md_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -146,6 +232,52 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Assessment */
+        Assessment: {
+            /** Columns */
+            columns: number;
+            /** Effort Days Max */
+            effort_days_max: number;
+            /** Effort Days Min */
+            effort_days_min: number;
+            /** Findings */
+            findings: components["schemas"]["Finding"][];
+            level: components["schemas"]["ComplexityLevel"];
+            /** Readiness Pct */
+            readiness_pct: number;
+            /** Ready */
+            readonly ready: boolean;
+            /** Score */
+            score: number;
+            /** Source Engine */
+            source_engine: string;
+            /** Source Version */
+            source_version?: string | null;
+            /** Tables */
+            tables: number;
+            /** Target Engine */
+            target_engine: string;
+            /** Total Bytes */
+            total_bytes: number;
+            /** Total Rows */
+            total_rows: number;
+        };
+        /**
+         * AssessmentRun
+         * @description A stored assessment: the engine result plus when it ran.
+         */
+        AssessmentRun: {
+            assessment: components["schemas"]["Assessment"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Migration Id */
+            migration_id: string;
+        };
         /**
          * Capabilities
          * @description What a connector supports — drives what the UI offers for an engine pair.
@@ -195,10 +327,20 @@ export interface components {
             total_tables: number;
         };
         /**
+         * Category
+         * @enum {string}
+         */
+        Category: "keys" | "types" | "naming" | "behaviour" | "capability";
+        /**
          * CheckStatus
          * @enum {string}
          */
         CheckStatus: "ok" | "warning" | "failed";
+        /**
+         * ComplexityLevel
+         * @enum {string}
+         */
+        ComplexityLevel: "low" | "moderate" | "high";
         /** Connection */
         Connection: {
             /**
@@ -307,6 +449,37 @@ export interface components {
             /** Engine */
             engine: string;
         };
+        /**
+         * Finding
+         * @description One item on the Check screen: plain-language title, affected objects, a fix.
+         */
+        Finding: {
+            /**
+             * Affected Columns
+             * @default 0
+             */
+            affected_columns?: number;
+            /**
+             * Auto Fixable
+             * @default false
+             */
+            auto_fixable?: boolean;
+            category: components["schemas"]["Category"];
+            /** Detail */
+            detail: string;
+            /**
+             * Objects
+             * @default []
+             */
+            objects?: string[];
+            /** Recommendation */
+            recommendation?: string | null;
+            /** Rule Id */
+            rule_id: string;
+            severity: components["schemas"]["Severity"];
+            /** Title */
+            title: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -326,6 +499,48 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** Migration */
+        Migration: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Source Connection Id */
+            source_connection_id: string;
+            /** Source Engine */
+            source_engine: string;
+            status: components["schemas"]["MigrationStatus"];
+            /** Target Connection Id */
+            target_connection_id: string | null;
+            /** Target Engine */
+            target_engine: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** MigrationCreate */
+        MigrationCreate: {
+            /** Name */
+            name: string;
+            /** Source Connection Id */
+            source_connection_id: string;
+            /** Target Connection Id */
+            target_connection_id?: string | null;
+            /** Target Engine */
+            target_engine: string;
+        };
+        /**
+         * MigrationStatus
+         * @enum {string}
+         */
+        MigrationStatus: "draft" | "ready" | "needs_attention";
         /** Page[Connection] */
         Page_Connection_: {
             /** Items */
@@ -333,6 +548,18 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[Migration] */
+        Page_Migration_: {
+            /** Items */
+            items: components["schemas"]["Migration"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * Severity
+         * @enum {string}
+         */
+        Severity: "blocking" | "warning" | "info";
         /**
          * SslMode
          * @enum {string}
@@ -600,6 +827,183 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConnectorInfo"][];
+                };
+            };
+        };
+    };
+    list_migrations_api_v1_migrations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_Migration_"];
+                };
+            };
+        };
+    };
+    create_migration_api_v1_migrations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MigrationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Migration"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_migration_api_v1_migrations__migration_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                migration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Migration"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_assessment_api_v1_migrations__migration_id__assessments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                migration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentRun"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    latest_assessment_api_v1_migrations__migration_id__assessments_latest_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                migration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentRun"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assessment_report_api_v1_migrations__migration_id__assessments_latest_report_md_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                migration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -1,6 +1,122 @@
 {
   "components": {
     "schemas": {
+      "Assessment": {
+        "properties": {
+          "columns": {
+            "title": "Columns",
+            "type": "integer"
+          },
+          "effort_days_max": {
+            "title": "Effort Days Max",
+            "type": "integer"
+          },
+          "effort_days_min": {
+            "title": "Effort Days Min",
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "level": {
+            "$ref": "#/components/schemas/ComplexityLevel"
+          },
+          "readiness_pct": {
+            "title": "Readiness Pct",
+            "type": "integer"
+          },
+          "ready": {
+            "readOnly": true,
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "source_engine": {
+            "title": "Source Engine",
+            "type": "string"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
+          },
+          "tables": {
+            "title": "Tables",
+            "type": "integer"
+          },
+          "target_engine": {
+            "title": "Target Engine",
+            "type": "string"
+          },
+          "total_bytes": {
+            "title": "Total Bytes",
+            "type": "integer"
+          },
+          "total_rows": {
+            "title": "Total Rows",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source_engine",
+          "target_engine",
+          "findings",
+          "tables",
+          "columns",
+          "total_rows",
+          "total_bytes",
+          "score",
+          "level",
+          "readiness_pct",
+          "effort_days_min",
+          "effort_days_max",
+          "ready"
+        ],
+        "title": "Assessment",
+        "type": "object"
+      },
+      "AssessmentRun": {
+        "description": "A stored assessment: the engine result plus when it ran.",
+        "properties": {
+          "assessment": {
+            "$ref": "#/components/schemas/Assessment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "migration_id": {
+            "title": "Migration Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "migration_id",
+          "created_at",
+          "assessment"
+        ],
+        "title": "AssessmentRun",
+        "type": "object"
+      },
       "Capabilities": {
         "description": "What a connector supports \u2014 drives what the UI offers for an engine pair.",
         "properties": {
@@ -89,6 +205,17 @@
         "title": "CatalogSummary",
         "type": "object"
       },
+      "Category": {
+        "enum": [
+          "keys",
+          "types",
+          "naming",
+          "behaviour",
+          "capability"
+        ],
+        "title": "Category",
+        "type": "string"
+      },
       "CheckStatus": {
         "enum": [
           "ok",
@@ -96,6 +223,15 @@
           "failed"
         ],
         "title": "CheckStatus",
+        "type": "string"
+      },
+      "ComplexityLevel": {
+        "enum": [
+          "low",
+          "moderate",
+          "high"
+        ],
+        "title": "ComplexityLevel",
         "type": "string"
       },
       "Connection": {
@@ -370,6 +506,67 @@
         "title": "ConnectorInfo",
         "type": "object"
       },
+      "Finding": {
+        "description": "One item on the Check screen: plain-language title, affected objects, a fix.",
+        "properties": {
+          "affected_columns": {
+            "default": 0,
+            "title": "Affected Columns",
+            "type": "integer"
+          },
+          "auto_fixable": {
+            "default": false,
+            "title": "Auto Fixable",
+            "type": "boolean"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "objects": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "severity",
+          "category",
+          "title",
+          "detail"
+        ],
+        "title": "Finding",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -409,6 +606,115 @@
         "title": "Health",
         "type": "object"
       },
+      "Migration": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source_connection_id": {
+            "title": "Source Connection Id",
+            "type": "string"
+          },
+          "source_engine": {
+            "title": "Source Engine",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MigrationStatus"
+          },
+          "target_connection_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Connection Id"
+          },
+          "target_engine": {
+            "title": "Target Engine",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "source_connection_id",
+          "source_engine",
+          "target_engine",
+          "target_connection_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Migration",
+        "type": "object"
+      },
+      "MigrationCreate": {
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "^\\S(.*\\S)?$",
+            "title": "Name",
+            "type": "string"
+          },
+          "source_connection_id": {
+            "title": "Source Connection Id",
+            "type": "string"
+          },
+          "target_connection_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Connection Id"
+          },
+          "target_engine": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Target Engine",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "source_connection_id",
+          "target_engine"
+        ],
+        "title": "MigrationCreate",
+        "type": "object"
+      },
+      "MigrationStatus": {
+        "enum": [
+          "draft",
+          "ready",
+          "needs_attention"
+        ],
+        "title": "MigrationStatus",
+        "type": "string"
+      },
       "Page_Connection_": {
         "properties": {
           "items": {
@@ -429,6 +735,36 @@
         ],
         "title": "Page[Connection]",
         "type": "object"
+      },
+      "Page_Migration_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Migration"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[Migration]",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "blocking",
+          "warning",
+          "info"
+        ],
+        "title": "Severity",
+        "type": "string"
       },
       "SslMode": {
         "enum": [
@@ -838,6 +1174,234 @@
         "summary": "List supported engines",
         "tags": [
           "connectors"
+        ]
+      }
+    },
+    "/api/v1/migrations": {
+      "get": {
+        "operationId": "list_migrations_api_v1_migrations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Migration_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List migrations (newest first)",
+        "tags": [
+          "migrations"
+        ]
+      },
+      "post": {
+        "operationId": "create_migration_api_v1_migrations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Migration"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a draft",
+        "tags": [
+          "migrations"
+        ]
+      }
+    },
+    "/api/v1/migrations/{migration_id}": {
+      "get": {
+        "operationId": "get_migration_api_v1_migrations__migration_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "migration_id",
+            "required": true,
+            "schema": {
+              "title": "Migration Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Migration"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get a migration",
+        "tags": [
+          "migrations"
+        ]
+      }
+    },
+    "/api/v1/migrations/{migration_id}/assessments": {
+      "post": {
+        "operationId": "run_assessment_api_v1_migrations__migration_id__assessments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "migration_id",
+            "required": true,
+            "schema": {
+              "title": "Migration Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assess the source database against the target engine",
+        "tags": [
+          "migrations"
+        ]
+      }
+    },
+    "/api/v1/migrations/{migration_id}/assessments/latest": {
+      "get": {
+        "operationId": "latest_assessment_api_v1_migrations__migration_id__assessments_latest_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "migration_id",
+            "required": true,
+            "schema": {
+              "title": "Migration Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Most recent assessment",
+        "tags": [
+          "migrations"
+        ]
+      }
+    },
+    "/api/v1/migrations/{migration_id}/assessments/latest/report.md": {
+      "get": {
+        "operationId": "assessment_report_api_v1_migrations__migration_id__assessments_latest_report_md_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "migration_id",
+            "required": true,
+            "schema": {
+              "title": "Migration Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download the latest assessment as a Markdown report",
+        "tags": [
+          "migrations"
         ]
       }
     },
