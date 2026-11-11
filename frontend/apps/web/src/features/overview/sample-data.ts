@@ -1,7 +1,22 @@
-import type { MigrationSummary } from "./model";
+import type { MigrationStatus } from "@/features/migrations/model";
 
-/** Sample data until the migrations API lands (S6). Shapes match the planned contract. */
-export const MOCK_MIGRATIONS: MigrationSummary[] = [
+/** Program-level dashboard data. Sample only — real program metrics arrive with runs (S4+). */
+export interface SampleMigration {
+  id: string;
+  name: string;
+  team: string;
+  sourceEngine: string;
+  targetEngine: string;
+  wave: number;
+  status: MigrationStatus;
+  progress: number;
+  goLiveWindow: string | null;
+  risk: "low" | "medium" | "high";
+  ownerInitials: string;
+  sizeLabel: string;
+}
+
+export const SAMPLE_MIGRATIONS: SampleMigration[] = [
   { id: "DM-1042", name: "billing-db", team: "Finance", sourceEngine: "sqlserver", targetEngine: "postgres", wave: 2, status: "awaiting_approval", progress: 100, goLiveWindow: "Nov 14 · 02:00", risk: "medium", ownerInitials: "MR", sizeLabel: "1.8 TB" },
   { id: "DM-1038", name: "orders-core", team: "Commerce", sourceEngine: "mysql", targetEngine: "postgres", wave: 1, status: "copying", progress: 64, goLiveWindow: "Nov 28 · 02:00", risk: "low", ownerInitials: "JT", sizeLabel: "3.1 TB" },
   { id: "DM-1031", name: "crm-legacy", team: "Sales Ops", sourceEngine: "oracle", targetEngine: "postgres", wave: 1, status: "verifying", progress: 92, goLiveWindow: "Nov 21 · 01:00", risk: "high", ownerInitials: "AK", sizeLabel: "2.4 TB" },
