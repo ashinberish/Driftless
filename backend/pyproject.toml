@@ -1,0 +1,86 @@
+[project]
+name = "driftless-backend"
+version = "0.1.0"
+description = "Driftless backend workspace (apps + shared libraries)"
+requires-python = ">=3.14"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["libs/*", "apps/*"]
+
+[tool.uv.sources]
+driftless-core = { workspace = true }
+driftless-connectors = { workspace = true }
+driftless-engine = { workspace = true }
+driftless-api = { workspace = true }
+driftless-worker = { workspace = true }
+driftless-cli = { workspace = true }
+
+[dependency-groups]
+dev = [
+  "driftless-core",
+  "driftless-connectors[postgres]",
+  "driftless-engine",
+  "driftless-api",
+  "driftless-worker",
+  "driftless-cli",
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-cov>=6.0",
+  "httpx>=0.28",
+  "ruff>=0.8",
+  "pyright>=1.1.390",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["libs/*/src", "apps/*/src"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",   # pycodestyle / pyflakes
+  "I",             # isort
+  "B",             # bugbear
+  "UP",            # pyupgrade
+  "SIM",           # simplify
+  "RUF",           # ruff-specific
+  "N",             # naming
+  "ASYNC",         # async pitfalls
+  "S",             # bandit (security)
+  "PT",            # pytest style
+]
+ignore = ["S101"]  # assert is fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "N802"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "driftless_core", "driftless_connectors", "driftless_engine",
+  "driftless_api", "driftless_worker", "driftless_cli",
+]
+
+# ---------------------------------------------------------------- pyright
+[tool.pyright]
+include = ["libs", "apps"]
+exclude = ["**/.venv", "**/__pycache__"]
+pythonVersion = "3.14"
+typeCheckingMode = "standard"
+# Production code is checked strictly; tests use the standard profile.
+strict = ["libs/*/src", "apps/*/src"]
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["libs", "apps"]
+addopts = "-ra --strict-markers --import-mode=importlib"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "integration: needs real databases (run via `make test-integration`)",
+]
