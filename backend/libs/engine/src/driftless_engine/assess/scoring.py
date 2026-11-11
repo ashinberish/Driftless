@@ -40,7 +40,7 @@ def score(findings: Sequence[Finding], *, tables: int, columns: int, total_bytes
         finding_pts += min(cap, each * count)
     total = round(min(100, size_pts + table_pts + finding_pts))
 
-    level = (
+    level: ComplexityLevel = (
         ComplexityLevel.LOW
         if total <= LOW_MAX
         else ComplexityLevel.MODERATE
@@ -52,6 +52,9 @@ def score(findings: Sequence[Finding], *, tables: int, columns: int, total_bytes
     readiness = 100 if columns == 0 else round(100 * (1 - min(needs_review, columns) / columns))
 
     blocking = sum(1 for f in findings if f.severity is Severity.BLOCKING)
+    if blocking and level is ComplexityLevel.LOW:
+        # Anything that blocks the migration needs real work, however small the database.
+        level = ComplexityLevel.MODERATE
     base = 1 + total / 15
     return Score(
         score=total,

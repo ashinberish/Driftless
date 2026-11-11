@@ -19,6 +19,14 @@ export type CheckStatus = Schemas["CheckStatus"];
 export type ConnectionTestResult = Schemas["ConnectionTestResult"];
 export type CatalogSummary = Schemas["CatalogSummary"];
 export type TableSummary = Schemas["TableSummary"];
+export type Migration = Schemas["Migration"];
+export type MigrationCreate = Schemas["MigrationCreate"];
+export type MigrationStatus = Schemas["MigrationStatus"];
+export type Assessment = Schemas["Assessment"];
+export type AssessmentRun = Schemas["AssessmentRun"];
+export type Finding = Schemas["Finding"];
+export type Severity = Schemas["Severity"];
+export type ComplexityLevel = Schemas["ComplexityLevel"];
 
 export interface Page<T> {
   items: T[];

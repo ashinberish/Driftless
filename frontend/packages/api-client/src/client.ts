@@ -1,11 +1,14 @@
 import type {
   ApiErrorBody,
+  AssessmentRun,
   CatalogSummary,
   Connection,
   ConnectionCreate,
   ConnectionSpec,
   ConnectionTestResult,
   ConnectorInfo,
+  Migration,
+  MigrationCreate,
   Page,
 } from "./types";
 
@@ -53,7 +56,22 @@ export function createApiClient({ baseUrl = "/api/v1", fetch: fetchImpl = fetch,
     return (res.status === 204 ? undefined : await res.json()) as T;
   }
 
+  const migrationPath = (id: string) => `/migrations/${encodeURIComponent(id)}`;
+
   return {
+    migrations: {
+      list: () => request<Page<Migration>>("/migrations"),
+      get: (id: string) => request<Migration>(migrationPath(id)),
+      create: (body: MigrationCreate) =>
+        request<Migration>("/migrations", { method: "POST", body: JSON.stringify(body) }),
+      /** Run a new assessment against the source database's live catalog. */
+      assess: (id: string) =>
+        request<AssessmentRun>(`${migrationPath(id)}/assessments`, { method: "POST" }),
+      latestAssessment: (id: string) =>
+        request<AssessmentRun>(`${migrationPath(id)}/assessments/latest`),
+      /** URL of the Markdown report, for a plain download link. */
+      reportUrl: (id: string) => `${baseUrl}${migrationPath(id)}/assessments/latest/report.md`,
+    },
     connectors: {
       list: () => request<ConnectorInfo[]>("/connectors"),
     },

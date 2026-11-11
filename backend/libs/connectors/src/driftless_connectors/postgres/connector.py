@@ -69,7 +69,7 @@ class PostgresConnector(Connector):
         checks: list[ConnectionCheck] = []
         async with conn:
             latency_ms = round((time.perf_counter() - started) * 1000)
-            version = await self._scalar(conn, queries.SERVER_VERSION)
+            version = _short_version(await self._scalar(conn, queries.SERVER_VERSION))
             checks.append(
                 ConnectionCheck(
                     name="Reachable",
@@ -154,6 +154,14 @@ class PostgresConnector(Connector):
         )
         return Catalog(
             engine=self.engine,
-            server_version=version_row[0] if version_row else None,
+            server_version=_short_version(version_row[0]) if version_row else None,
             tables=tables,
         )
+
+
+def _short_version(raw: object) -> str | None:
+    """``"16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"`` -> ``"16.15"``."""
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    return text.split(" ", 1)[0] or None

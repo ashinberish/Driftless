@@ -155,6 +155,15 @@ def test_findings_raise_complexity(blocking: int, warnings: int, level: Complexi
     assert score(findings, tables=200, columns=2000, total_bytes=2 * 1024**4).level is level
 
 
+def test_blocking_findings_are_never_low_complexity() -> None:
+    blocker = Finding(
+        rule_id="x", severity=Severity.BLOCKING, category=Category.KEYS, title="t", detail="d"
+    )
+    assert (
+        score([blocker], tables=2, columns=4, total_bytes=1_000).level is ComplexityLevel.MODERATE
+    )
+
+
 def test_readiness_counts_columns_needing_review() -> None:
     finding = Finding(
         rule_id="x",
