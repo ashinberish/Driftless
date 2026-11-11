@@ -1,0 +1,40 @@
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# --- Environment ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# --- Node / frontend ---
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+frontend/**/dist/
+frontend/**/coverage/
+.vite/
+
+# --- Infra ---
+*.tfstate
+*.tfstate.*
+.terraform/
+deploy/helm/**/charts/*.tgz
