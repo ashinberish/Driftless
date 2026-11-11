@@ -10,9 +10,10 @@ from sqlalchemy.engine import Connection
 
 # Import models so they register on Base.metadata (autogenerate needs them).
 from driftless_api.modules.connections import models as connection_models
+from driftless_api.modules.migrations import models as migration_models
 from driftless_api.platform.db import Base, Database
 
-MODEL_MODULES = (connection_models,)
+MODEL_MODULES = (connection_models, migration_models)
 
 config = context.config
 target_metadata = Base.metadata

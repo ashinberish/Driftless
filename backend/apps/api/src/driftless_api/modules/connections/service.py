@@ -6,7 +6,7 @@ Collaborators are injected: a repository (persistence), a secret registry (resol
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 
 from driftless_api.modules.connections.repository import ConnectionRepository
@@ -22,9 +22,11 @@ from driftless_connectors import registry
 from driftless_connectors.sdk import CheckStatus, ConnectionCheck, ConnectionConfig, Connector
 from driftless_core.errors import ConfigurationError, ConflictError, NotFoundError
 from driftless_core.ids import new_id
+from driftless_core.schema import Catalog
 from driftless_core.secrets import SecretNotFoundError, SecretResolverRegistry
 
 type ConnectorFactory = Callable[[ConnectionConfig], Connector]
+type InUseCheck = Callable[[str], Awaitable[bool]]
 
 
 class ConnectionService:
@@ -33,10 +35,12 @@ class ConnectionService:
         repository: ConnectionRepository,
         secrets: SecretResolverRegistry,
         connector_factory: ConnectorFactory = registry.create,
+        in_use: InUseCheck | None = None,
     ) -> None:
         self._repo = repository
         self._secrets = secrets
         self._connector_factory = connector_factory
+        self._in_use = in_use
 
     # ------------------------------------------------------------------ CRUD
     async def create(self, payload: ConnectionCreate) -> Connection:
@@ -64,6 +68,11 @@ class ConnectionService:
         return await self._repo.list()
 
     async def delete(self, connection_id: str) -> None:
+        if self._in_use is not None and await self._in_use(connection_id):
+            raise ConflictError(
+                "this connection is used by a migration; delete the migration first",
+                details={"connection_id": connection_id},
+            )
         if not await self._repo.delete(connection_id):
             raise NotFoundError(f"connection {connection_id!r} not found")
 
@@ -87,12 +96,16 @@ class ConnectionService:
     async def test(self, connection_id: str) -> ConnectionTestResult:
         return await self.test_spec(await self.get(connection_id))
 
+    async def catalog(self, connection_id: str, schemas: list[str] | None = None) -> Catalog:
+        """Full canonical catalog of a saved connection (used by assessments)."""
+        connection = await self.get(connection_id)
+        connector = self._connector_factory(await self._config(connection))
+        return await connector.discover(schemas)
+
     async def discover(
         self, connection_id: str, schemas: list[str] | None = None
     ) -> CatalogSummary:
-        connection = await self.get(connection_id)
-        connector = self._connector_factory(await self._config(connection))
-        catalog = await connector.discover(schemas)
+        catalog = await self.catalog(connection_id, schemas)
         return CatalogSummary(
             engine=catalog.engine,
             server_version=catalog.server_version,
