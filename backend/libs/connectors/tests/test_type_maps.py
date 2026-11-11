@@ -104,3 +104,11 @@ def test_mysql_to_postgres_roundtrip_via_canonical() -> None:
         canonical = my.to_canonical(native)
         rendered = pg.to_native(canonical)
         assert pg.to_canonical(rendered).kind is canonical.kind, native
+
+
+def test_postgres_version_is_shortened() -> None:
+    from driftless_connectors.postgres.connector import _short_version  # pyright: ignore[reportPrivateUsage]
+
+    assert _short_version("16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)") == "16.15"
+    assert _short_version("17.2") == "17.2"
+    assert _short_version(None) is None

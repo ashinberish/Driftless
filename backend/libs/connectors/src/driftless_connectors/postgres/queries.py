@@ -1,12 +1,21 @@
 """Catalog queries for PostgreSQL. ``%(schemas)s`` is NULL for "all user schemas"."""
 
+from typing import Final
+
 _USER_SCHEMAS = """
     n.nspname NOT IN ('pg_catalog', 'information_schema')
     AND n.nspname NOT LIKE 'pg_toast%%'
     AND (%(schemas)s::text[] IS NULL OR n.nspname = ANY(%(schemas)s::text[]))
 """
 
-WAL_LEVEL = "SHOW wal_level"
+WAL_LEVEL: Final = "SHOW wal_level"
+SERVER_VERSION: Final = "SHOW server_version"
+
+VISIBLE_TABLES: Final = """
+SELECT count(*) FROM information_schema.tables
+WHERE table_type = 'BASE TABLE'
+  AND table_schema NOT IN ('pg_catalog', 'information_schema')
+"""
 
 COLUMNS = f"""
 SELECT n.nspname, c.relname, a.attname,

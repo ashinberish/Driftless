@@ -1,67 +1,66 @@
+import type { Migration, Severity } from "@driftless/api-client";
 import type { StatusTone } from "@driftless/ui";
 
+/**
+ * Every status a migration can show. The first three come from the API today; the rest
+ * arrive with copy, CDC and cutover (S4–S8) and are already styled so screens agree.
+ */
 export type MigrationStatus =
-  | "draft"
+  | Migration["status"]
   | "assessing"
   | "scheduled"
   | "copying"
   | "verifying"
   | "awaiting_approval"
-  | "needs_attention"
   | "live";
-
-export type Risk = "low" | "medium" | "high";
-
-export interface MigrationSummary {
-  id: string;
-  name: string;
-  team: string;
-  sourceEngine: string;
-  targetEngine: string;
-  wave: number;
-  status: MigrationStatus;
-  progress: number;
-  goLiveWindow: string | null;
-  risk: Risk;
-  ownerInitials: string;
-  sizeLabel: string;
-}
 
 /** One place that decides how a status looks — every screen reuses it. */
 export const STATUS_META: Record<MigrationStatus, { label: string; tone: StatusTone }> = {
   draft: { label: "Draft", tone: "neutral" },
+  ready: { label: "Ready", tone: "success" },
+  needs_attention: { label: "Needs attention", tone: "danger" },
   assessing: { label: "Assessing", tone: "neutral" },
   scheduled: { label: "Scheduled", tone: "neutral" },
   copying: { label: "Copying", tone: "progress" },
   verifying: { label: "Verifying", tone: "info" },
   awaiting_approval: { label: "Awaiting approval", tone: "warning" },
-  needs_attention: { label: "Needs attention", tone: "danger" },
   live: { label: "Live", tone: "success" },
 };
 
-export const RISK_META: Record<Risk, { label: string; className: string }> = {
-  low: { label: "Low", className: "text-success" },
-  medium: { label: "Medium", className: "text-warning" },
-  high: { label: "High", className: "text-danger" },
+export const SEVERITY_TONE: Record<Severity, StatusTone> = {
+  blocking: "danger",
+  warning: "warning",
+  info: "info",
 };
 
-export type MigrationFilter = "all" | "running" | "attention" | "scheduled" | "live" | "draft";
+export type MigrationFilter = "all" | "attention" | "ready" | "draft";
 
-const RUNNING: MigrationStatus[] = ["copying", "verifying", "assessing"];
-
-export function matchesFilter(m: MigrationSummary, filter: MigrationFilter): boolean {
+export function matchesFilter(m: Pick<Migration, "status">, filter: MigrationFilter): boolean {
   switch (filter) {
     case "all":
       return true;
-    case "running":
-      return RUNNING.includes(m.status);
     case "attention":
-      return m.status === "needs_attention" || m.status === "awaiting_approval";
-    case "scheduled":
-      return m.status === "scheduled";
-    case "live":
-      return m.status === "live";
+      return m.status === "needs_attention";
+    case "ready":
+      return m.status === "ready";
     case "draft":
       return m.status === "draft";
   }
 }
+
+/** Headline for the Check screen, by complexity level. */
+export const LEVEL_COPY = {
+  low: "Good news — this one looks very doable",
+  moderate: "Doable, with some work up front",
+  high: "This one needs careful planning",
+} as const;
+
+/** The six steps of the migration journey (v5 design). */
+export const WIZARD_STEPS = [
+  { id: "connect", label: "Connect", hint: "Source & target" },
+  { id: "check", label: "Check", hint: "What we found" },
+  { id: "settings", label: "Settings", hint: "Quick choices" },
+  { id: "launch", label: "Launch", hint: "How & when" },
+  { id: "copy", label: "Copy", hint: "Live progress" },
+  { id: "golive", label: "Go live", hint: "Switch over" },
+];

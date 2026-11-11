@@ -1,16 +1,17 @@
 import { Button, Card, CardHeader, EngineBadge, PageHeader, ProgressBar } from "@driftless/ui";
 import { ArrowRight, Download, Flag, Plus } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { MigrationStatusBadge } from "@/features/migrations/components/MigrationStatusBadge";
-import { MOCK_MIGRATIONS } from "@/features/migrations/mock-data";
+import { SAMPLE_MIGRATIONS } from "./sample-data";
 
 export function OverviewPage() {
-  const active = MOCK_MIGRATIONS.filter((m) => m.status !== "live" && m.status !== "draft");
+  const navigate = useNavigate();
+  const active = SAMPLE_MIGRATIONS.filter((m) => m.status !== "live" && m.status !== "draft");
   return (
     <>
       <PageHeader
-        eyebrow="Data Platform workspace"
+        eyebrow="Data Platform workspace · sample data"
         title="Good afternoon, Maya"
         description={`${active.length} migrations in flight · 18.4 TB moved this month`}
         actions={
@@ -18,7 +19,7 @@ export function OverviewPage() {
             <Button>
               <Download /> Export program report
             </Button>
-            <Button variant="primary" size="lg">
+            <Button variant="primary" size="lg" onClick={() => navigate("/migrations/new")}>
               <Plus /> New migration
             </Button>
           </>
@@ -48,7 +49,7 @@ export function OverviewPage() {
         </Link>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {MOCK_MIGRATIONS.slice(0, 6).map((m) => (
+        {SAMPLE_MIGRATIONS.slice(0, 6).map((m) => (
           <Card key={m.id}>
             <CardHeader title={m.name} actions={<MigrationStatusBadge status={m.status} />} />
             <div className="mb-4 flex items-center gap-2">

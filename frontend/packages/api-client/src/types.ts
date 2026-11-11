@@ -1,54 +1,39 @@
 /**
- * API contracts. Hand-written to mirror the FastAPI schemas for now;
- * replaced by types generated from /api/v1/openapi.json in S1 (`pnpm gen:api`).
+ * API contracts, derived from the backend's OpenAPI document.
+ *
+ * Do not hand-edit shapes here: change the FastAPI schema, then run `make api-types`
+ * (regenerates openapi.json and src/generated/schema.ts). CI fails if they drift.
  */
+import type { components } from "./generated/schema";
 
-export type SslMode = "disable" | "prefer" | "require" | "verify-full";
+type Schemas = components["schemas"];
 
-export interface Capabilities {
-  read: boolean;
-  write: boolean;
-  cdc: boolean;
-  parallel_read: boolean;
-  native_checksum: boolean;
-}
-
-export interface ConnectorInfo {
-  engine: string;
-  display_name: string;
-  default_port: number;
-  capabilities: Capabilities;
-}
-
-export interface Connection {
-  id: string;
-  name: string;
-  engine: string;
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  secret_ref: string;
-  ssl_mode: SslMode;
-  created_at: string;
-}
-
-export interface ConnectionCreate {
-  name: string;
-  engine: string;
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  secret_ref: string;
-  ssl_mode?: SslMode;
-}
+export type Capabilities = Schemas["Capabilities"];
+export type ConnectorInfo = Schemas["ConnectorInfo"];
+export type SslMode = Schemas["SslMode"];
+export type Connection = Schemas["Connection"];
+export type ConnectionCreate = Schemas["ConnectionCreate"];
+export type ConnectionSpec = Schemas["ConnectionSpec"];
+export type ConnectionCheck = Schemas["ConnectionCheck"];
+export type CheckStatus = Schemas["CheckStatus"];
+export type ConnectionTestResult = Schemas["ConnectionTestResult"];
+export type CatalogSummary = Schemas["CatalogSummary"];
+export type TableSummary = Schemas["TableSummary"];
+export type Migration = Schemas["Migration"];
+export type MigrationCreate = Schemas["MigrationCreate"];
+export type MigrationStatus = Schemas["MigrationStatus"];
+export type Assessment = Schemas["Assessment"];
+export type AssessmentRun = Schemas["AssessmentRun"];
+export type Finding = Schemas["Finding"];
+export type Severity = Schemas["Severity"];
+export type ComplexityLevel = Schemas["ComplexityLevel"];
 
 export interface Page<T> {
   items: T[];
   total: number;
 }
 
+/** Error envelope produced by the API's error handler (not part of OpenAPI yet). */
 export interface ApiErrorBody {
   error: { code: string; message: string; details: Record<string, unknown> };
   request_id: string | null;

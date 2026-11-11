@@ -5,9 +5,9 @@ reference engineers use for "which sprint does X land in".
 
 | Sprint | Dates | Focus |
 |---|---|---|
-| S0 | Nov 16–27 | Foundations: repo, CI, tokens, app shell **(this scaffold)** |
-| S1 | Nov 30–Dec 11 | Metadata DB + Alembic, connections API, Postgres discover, Connect screen |
-| S2 | Dec 14–23 | Assessment engine v1, Check screen |
+| S0 | Nov 16–27 | Foundations: repo, CI, tokens, app shell ✅ |
+| S1 | Nov 30–Dec 11 | Metadata DB + Alembic, connections API, Postgres discover, Connect screen ✅ |
+| S2 | Dec 14–23 | Assessment engine v1, Check screen ✅ |
 | S3 | Jan 4–15 | Canonical model + sqlglot DDL, Settings screen |
 | S4 | Jan 18–29 | Temporal copy workflow, chunked COPY, Launch + Live screens |
 | S5 | Feb 1–12 | Validation (normalized checksums), Done screen |

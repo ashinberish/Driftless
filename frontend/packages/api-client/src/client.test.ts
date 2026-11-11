@@ -52,4 +52,13 @@ describe("createApiClient", () => {
     const api = createApiClient({ fetch: fetchMock });
     await expect(api.connections.remove("conn_1")).resolves.toBeUndefined();
   });
+
+  it("encodes discover schema filters as repeated query params", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { tables: [] }));
+    const api = createApiClient({ fetch: fetchMock });
+    await api.connections.discover("conn_1", ["sales", "public"]);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "/api/v1/connections/conn_1/discover?schemas=sales&schemas=public",
+    );
+  });
 });

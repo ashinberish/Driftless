@@ -10,6 +10,7 @@ x-backend-env: &backend-env
   DRIFTLESS_ENVIRONMENT: local
   DRIFTLESS_LOG_LEVEL: INFO
   DRIFTLESS_TEMPORAL_ADDRESS: temporal:7233
+  DRIFTLESS_DATABASE_URL: postgresql://driftless:driftless@metadata-db:5432/driftless
 
 services:
   metadata-db:
@@ -62,11 +63,21 @@ services:
     ports: ["8233:8080"]
 
   # ---------------------------------------------------------------- app (profile)
+  migrate:
+    profiles: ["app"]
+    build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: api } }
+    environment: *backend-env
+    entrypoint: ["driftless-api-migrate", "upgrade"]
+    depends_on:
+      metadata-db: { condition: service_healthy }
+
   api:
     profiles: ["app"]
     build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: api } }
     environment: *backend-env
     ports: ["8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
 
   worker:
     profiles: ["app"]

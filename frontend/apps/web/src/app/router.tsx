@@ -1,7 +1,11 @@
 import { createBrowserRouter, RouterProvider, type RouteObject } from "react-router";
 
+import { ConnectionDetailPage } from "@/features/connections/ConnectionDetailPage";
 import { ConnectionsPage } from "@/features/connections/ConnectionsPage";
+import { NewConnectionPage } from "@/features/connections/NewConnectionPage";
+import { MigrationCheckPage } from "@/features/migrations/MigrationCheckPage";
 import { MigrationsPage } from "@/features/migrations/MigrationsPage";
+import { NewMigrationPage } from "@/features/migrations/NewMigrationPage";
 import { OverviewPage } from "@/features/overview/OverviewPage";
 import { ComingSoonPage } from "@/shared/ComingSoonPage";
 
@@ -28,9 +32,35 @@ export const routes: RouteObject[] = [
         handle: { nav: "migrations", crumbs: ["Data Platform", "Migrations"] } satisfies RouteHandle,
       },
       {
+        path: "migrations/new",
+        element: <NewMigrationPage />,
+        handle: { nav: "migrations", crumbs: ["Migrations", "New migration"] } satisfies RouteHandle,
+      },
+      {
+        path: "migrations/:migrationId/check",
+        element: <MigrationCheckPage />,
+        handle: { nav: "migrations", crumbs: ["Migrations", "Check"] } satisfies RouteHandle,
+      },
+      {
         path: "connections",
         element: <ConnectionsPage />,
         handle: { nav: "connections", crumbs: ["Infrastructure", "Connections"] } satisfies RouteHandle,
+      },
+      {
+        path: "connections/new",
+        element: <NewConnectionPage />,
+        handle: {
+          nav: "connections",
+          crumbs: ["Infrastructure", "Connections", "New"],
+        } satisfies RouteHandle,
+      },
+      {
+        path: "connections/:connectionId",
+        element: <ConnectionDetailPage />,
+        handle: {
+          nav: "connections",
+          crumbs: ["Infrastructure", "Connections", "Details"],
+        } satisfies RouteHandle,
       },
       comingSoon("approvals", "approvals", ["Data Platform", "Approvals"], "S10"),
       comingSoon("runs", "runs", ["Data Platform", "Live runs"], "S4"),

@@ -5,8 +5,15 @@ image:
   tag: ""          # defaults to .Chart.AppVersion
   pullPolicy: IfNotPresent
 
+# Secrets (database URL, Vault token) come from an existing Kubernetes Secret.
+existingSecret: driftless-secrets   # keys: DRIFTLESS_DATABASE_URL, DRIFTLESS_VAULT_TOKEN
+
+migrations:
+  enabled: true   # run driftless-api-migrate as a pre-install/pre-upgrade hook
+
 env:
   DRIFTLESS_ENVIRONMENT: production
+  DRIFTLESS_SECRET_ENV_ENABLED: "false"
   DRIFTLESS_LOG_JSON: "true"
   DRIFTLESS_TEMPORAL_ADDRESS: temporal-frontend:7233
 

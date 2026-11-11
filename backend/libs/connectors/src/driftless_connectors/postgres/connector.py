@@ -6,9 +6,10 @@ logical-replication CDC land in S4/S7 (see docs/execution-plan.md).
 
 from __future__ import annotations
 
+import time
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, LiteralString
 
 from driftless_connectors.postgres import queries
 from driftless_connectors.postgres.type_map import PostgresTypeMapper
@@ -55,12 +56,38 @@ class PostgresConnector(Connector):
             raise ConnectionFailedError(str(exc), details={"host": self.config.host}) from exc
 
     async def check(self) -> Sequence[ConnectionCheck]:
+        """Pre-flight checks. Never raises for an unreachable server: the failure is
+        reported as a check so the UI can show it next to the others."""
+        started = time.perf_counter()
+        try:
+            conn = await self._connect()
+        except ConnectionFailedError as exc:
+            return [
+                ConnectionCheck(name="Reachable", status=CheckStatus.FAILED, detail=exc.message)
+            ]
+
         checks: list[ConnectionCheck] = []
-        async with await self._connect() as conn:
-            checks.append(ConnectionCheck(name="Reachable", status=CheckStatus.OK))
-            cur = await conn.execute(queries.WAL_LEVEL)
-            row = await cur.fetchone()
-            wal_level = row[0] if row else "unknown"
+        async with conn:
+            latency_ms = round((time.perf_counter() - started) * 1000)
+            version = _short_version(await self._scalar(conn, queries.SERVER_VERSION))
+            checks.append(
+                ConnectionCheck(
+                    name="Reachable",
+                    status=CheckStatus.OK,
+                    detail=f"PostgreSQL {version} · {latency_ms} ms",
+                )
+            )
+            tables = int(str(await self._scalar(conn, queries.VISIBLE_TABLES) or 0))
+            checks.append(
+                ConnectionCheck(
+                    name="Read access",
+                    status=CheckStatus.OK if tables else CheckStatus.WARNING,
+                    detail=f"{tables} tables visible"
+                    if tables
+                    else "No tables visible — check the user's privileges",
+                )
+            )
+            wal_level = await self._scalar(conn, queries.WAL_LEVEL) or "unknown"
             if wal_level == "logical":
                 checks.append(ConnectionCheck(name="Change tracking", status=CheckStatus.OK))
             else:
@@ -73,6 +100,11 @@ class PostgresConnector(Connector):
                     )
                 )
         return checks
+
+    @staticmethod
+    async def _scalar(conn: AsyncConnection[Any], sql: LiteralString) -> object:
+        row: tuple[object, ...] | None = await (await conn.execute(sql)).fetchone()
+        return row[0] if row else None
 
     async def discover(self, schemas: Sequence[str] | None = None) -> Catalog:
         scope = list(schemas) if schemas else None
@@ -122,6 +154,14 @@ class PostgresConnector(Connector):
         )
         return Catalog(
             engine=self.engine,
-            server_version=version_row[0] if version_row else None,
+            server_version=_short_version(version_row[0]) if version_row else None,
             tables=tables,
         )
+
+
+def _short_version(raw: object) -> str | None:
+    """``"16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"`` -> ``"16.15"``."""
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    return text.split(" ", 1)[0] or None
