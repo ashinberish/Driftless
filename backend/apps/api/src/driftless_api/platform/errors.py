@@ -12,12 +12,14 @@ from driftless_core.errors import (
     NotFoundError,
     UnsupportedFeatureError,
 )
+from driftless_core.secrets import SecretNotFoundError
 
 _STATUS: dict[type[DriftlessError], int] = {
     NotFoundError: status.HTTP_404_NOT_FOUND,
     ConflictError: status.HTTP_409_CONFLICT,
     UnsupportedFeatureError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     ConnectionFailedError: status.HTTP_502_BAD_GATEWAY,
+    SecretNotFoundError: status.HTTP_422_UNPROCESSABLE_CONTENT,
 }
 
 
