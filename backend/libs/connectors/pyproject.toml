@@ -1,0 +1,21 @@
+[project]
+name = "driftless-connectors"
+version = "0.1.0"
+description = "Connector SDK (protocols, registry) and built-in database connectors"
+requires-python = ">=3.14"
+dependencies = ["driftless-core"]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2"]
+
+# Third-party connectors register themselves under this entry-point group.
+[project.entry-points."driftless.connectors"]
+postgres = "driftless_connectors.postgres:PostgresConnector"
+mysql = "driftless_connectors.mysql:MySQLConnector"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/driftless_connectors"]

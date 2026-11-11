@@ -1,0 +1,6 @@
+# Default owner for everything until teams are set up.
+*                       @ashinberish
+
+# Data-integrity critical code needs a second review once the team grows.
+/backend/libs/core/     @ashinberish
+/backend/libs/engine/   @ashinberish

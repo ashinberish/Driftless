@@ -1,0 +1,131 @@
+{
+  "engine": "sqlserver",
+  "server_version": "15.0",
+  "tables": [
+    {
+      "schema_name": "dbo",
+      "name": "Customers",
+      "columns": [
+        {
+          "name": "CustomerID",
+          "type": {
+            "kind": "integer",
+            "case_insensitive": false,
+            "native": "int"
+          },
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "Email",
+          "type": {
+            "kind": "varchar",
+            "length": 255,
+            "case_insensitive": true,
+            "native": "nvarchar(255)"
+          },
+          "nullable": false,
+          "identity": false
+        }
+      ],
+      "primary_key": {
+        "columns": [
+          "CustomerID"
+        ]
+      },
+      "foreign_keys": [],
+      "indexes": [],
+      "row_estimate": 1200000,
+      "size_bytes": 210000000
+    },
+    {
+      "schema_name": "dbo",
+      "name": "Invoices",
+      "columns": [
+        {
+          "name": "InvoiceID",
+          "type": {
+            "kind": "integer",
+            "case_insensitive": false,
+            "native": "int"
+          },
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "CustomerID",
+          "type": {
+            "kind": "integer",
+            "case_insensitive": false,
+            "native": "int"
+          },
+          "nullable": false,
+          "identity": false
+        },
+        {
+          "name": "Amount",
+          "type": {
+            "kind": "decimal",
+            "precision": 19,
+            "scale": 4,
+            "case_insensitive": false,
+            "native": "money"
+          },
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "IssuedAt",
+          "type": {
+            "kind": "timestamp",
+            "precision": 7,
+            "case_insensitive": false,
+            "native": "datetime2(7)"
+          },
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "IsVoid",
+          "type": {
+            "kind": "boolean",
+            "case_insensitive": false,
+            "native": "bit"
+          },
+          "nullable": false,
+          "identity": false
+        }
+      ],
+      "primary_key": {
+        "columns": [
+          "InvoiceID"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "CustomerID"
+          ],
+          "ref_schema": "dbo",
+          "ref_table": "Customers",
+          "ref_columns": [
+            "CustomerID"
+          ],
+          "on_delete": "no_action",
+          "on_update": "no_action"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "IX_Invoices_Customer",
+          "columns": [
+            "CustomerID"
+          ],
+          "unique": false
+        }
+      ],
+      "row_estimate": 48200000,
+      "size_bytes": 227000000000
+    }
+  ]
+}

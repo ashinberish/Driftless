@@ -1,0 +1,28 @@
+[project]
+name = "driftless-api"
+version = "0.1.0"
+description = "Driftless control-plane REST API"
+requires-python = ">=3.14"
+dependencies = [
+  "driftless-core",
+  "driftless-connectors",
+  "driftless-engine",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "sqlalchemy[asyncio]>=2.0.36",
+  "alembic>=1.14",
+  "psycopg[binary]>=3.2",
+  "httpx>=0.28",
+]
+
+[project.scripts]
+driftless-api = "driftless_api.main:run"
+driftless-api-migrate = "driftless_api.migrate:main"
+driftless-api-openapi = "driftless_api.openapi:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/driftless_api"]

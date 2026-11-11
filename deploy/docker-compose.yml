@@ -1,0 +1,95 @@
+# Local development stack.
+#
+#   make infra-up        # databases + Temporal only (run api/worker/web from source)
+#   make stack-up        # everything in containers (profile "app")
+#
+# Sample source databases (pg-source, mysql-source) let you try migrations locally.
+name: driftless
+
+x-backend-env: &backend-env
+  DRIFTLESS_ENVIRONMENT: local
+  DRIFTLESS_LOG_LEVEL: INFO
+  DRIFTLESS_TEMPORAL_ADDRESS: temporal:7233
+  DRIFTLESS_DATABASE_URL: postgresql://driftless:driftless@metadata-db:5432/driftless
+
+services:
+  metadata-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: driftless
+      POSTGRES_PASSWORD: driftless  # local only
+      POSTGRES_DB: driftless
+    ports: ["5432:5432"]
+    volumes: [metadata-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U driftless"]
+      interval: 5s
+      retries: 10
+
+  pg-source:
+    image: postgres:17
+    command: ["postgres", "-c", "wal_level=logical"]
+    environment:
+      POSTGRES_USER: source
+      POSTGRES_PASSWORD: source  # local only
+      POSTGRES_DB: shop
+    ports: ["5433:5432"]
+
+  mysql-source:
+    image: mysql:8.4
+    command: ["--binlog-format=ROW", "--binlog-row-image=FULL"]
+    environment:
+      MYSQL_ROOT_PASSWORD: source  # local only
+      MYSQL_DATABASE: shop
+    ports: ["3306:3306"]
+
+  temporal:
+    image: temporalio/auto-setup:latest
+    depends_on:
+      metadata-db: { condition: service_healthy }
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: driftless
+      POSTGRES_PWD: driftless
+      POSTGRES_SEEDS: metadata-db
+    ports: ["7233:7233"]
+
+  temporal-ui:
+    image: temporalio/ui:latest
+    depends_on: [temporal]
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports: ["8233:8080"]
+
+  # ---------------------------------------------------------------- app (profile)
+  migrate:
+    profiles: ["app"]
+    build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: api } }
+    environment: *backend-env
+    entrypoint: ["driftless-api-migrate", "upgrade"]
+    depends_on:
+      metadata-db: { condition: service_healthy }
+
+  api:
+    profiles: ["app"]
+    build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: api } }
+    environment: *backend-env
+    ports: ["8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  worker:
+    profiles: ["app"]
+    build: { context: .., dockerfile: deploy/docker/backend.Dockerfile, args: { APP: worker } }
+    environment: *backend-env
+    depends_on: [temporal]
+
+  web:
+    profiles: ["app"]
+    build: { context: .., dockerfile: deploy/docker/web.Dockerfile }
+    depends_on: [api]
+    ports: ["8080:8080"]
+
+volumes:
+  metadata-data:
